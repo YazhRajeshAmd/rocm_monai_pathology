@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from cucim import CuImage
 import numpy as np
@@ -11,6 +11,8 @@ import torch.nn as nn
 import torchvision.models as models
 import torchvision.transforms as transforms
 import os
+import io
+from PIL import Image
 from monai.transforms import (
     Compose, LoadImage, ScaleIntensity, Resize, ToTensor, EnsureChannelFirst, Lambda,
     RandFlip, RandRotate, NormalizeIntensity
@@ -114,6 +116,105 @@ augment_preprocess = Compose([
     NormalizeIntensity(),
     ToTensor(),
 ])
+
+# -------------------------
+# SVS Image Preview endpoint
+# -------------------------
+@app.get("/preview-svs")
+async def preview_svs():
+    """Generate a preview of the SVS slide for display in the UI"""
+    try:
+        svs_path = "data/sample_wsi.svs"
+        if not os.path.exists(svs_path):
+            raise HTTPException(status_code=404, detail="SVS file not found")
+        
+        # Load slide with cuCIM
+        img = CuImage(svs_path)
+        
+        # Get the lowest resolution level for quick preview
+        # This is usually the last level (thumbnail)
+        level_count = img.resolutions['level_count']
+        thumbnail_level = min(level_count - 1, 3)  # Use level 3 or the last level
+        
+        # Get dimensions at the thumbnail level
+        level_dims = img.resolutions['level_dimensions'][thumbnail_level]
+        level_width, level_height = level_dims
+        
+        # Calculate preview size (max 800x600)
+        max_width, max_height = 800, 600
+        
+        # Scale down if needed
+        if level_width > max_width or level_height > max_height:
+            scale = min(max_width / level_width, max_height / level_height)
+            preview_width = int(level_width * scale)
+            preview_height = int(level_height * scale)
+        else:
+            preview_width = level_width
+            preview_height = level_height
+        
+        # Read the entire thumbnail level
+        region = img.read_region(
+            location=(0, 0), 
+            size=(level_width, level_height), 
+            level=thumbnail_level
+        )
+        
+        # Convert to PIL Image
+        arr = np.asarray(region)
+        if len(arr.shape) == 3 and arr.shape[-1] == 4:  # RGBA
+            arr = arr[:, :, :3]  # Convert to RGB
+        
+        pil_image = Image.fromarray(arr)
+        
+        # Resize if needed
+        if preview_width != level_width or preview_height != level_height:
+            pil_image = pil_image.resize((preview_width, preview_height), Image.Resampling.LANCZOS)
+        
+        # Save to bytes buffer
+        img_buffer = io.BytesIO()
+        pil_image.save(img_buffer, format='JPEG', quality=85)
+        img_buffer.seek(0)
+        
+        return StreamingResponse(
+            io.BytesIO(img_buffer.getvalue()),
+            media_type="image/jpeg",
+            headers={"Cache-Control": "public, max-age=3600"}
+        )
+        
+    except Exception as e:
+        # Return more detailed error information
+        error_msg = f"Error generating SVS preview: {str(e)}"
+        print(f"SVS Preview Error: {error_msg}")  # Log to console
+        raise HTTPException(status_code=500, detail=error_msg)
+
+# -------------------------
+# SVS Info endpoint
+# -------------------------
+@app.get("/svs-info")
+async def svs_info():
+    """Get information about the SVS slide"""
+    try:
+        svs_path = "data/sample_wsi.svs"
+        if not os.path.exists(svs_path):
+            raise HTTPException(status_code=404, detail="SVS file not found")
+        
+        img = CuImage(svs_path)
+        file_size = os.path.getsize(svs_path)
+        
+        return {
+            "filename": "sample_wsi.svs",
+            "file_size_mb": round(file_size / (1024 * 1024), 2),
+            "dimensions": {
+                "width": img.size[0],
+                "height": img.size[1]
+            },
+            "levels": img.resolutions['level_count'],
+            "level_dimensions": img.resolutions['level_dimensions'],
+            "magnification": getattr(img, 'objective_power', 'Unknown'),
+            "format": "SVS (Whole Slide Image)"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading SVS info: {str(e)}")
 
 # -------------------------
 # Enhanced Chat endpoint for Pathology Tumor Detection
