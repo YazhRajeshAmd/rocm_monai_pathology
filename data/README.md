@@ -1,57 +1,53 @@
-# 🔬 AMD MONAI Pathology Analysis
+# 🔬 MONAI Pathology Tumor Detection Chatbot
 
-A FastAPI-based web application for automated pathology tumor detection using MONAI's DenseNet121 architecture. This AMD ROCm-accelerated application analyzes whole slide images (WSI) to detect tumor regions in pathological samples.
+A FastAPI-based chatbot for automated pathology tumor detection using MONAI's DenseNet121 architecture. This application analyzes whole slide images (WSI) to detect tumor regions in pathological samples.
 
 ## 🏥 Features
 
-- **AMD ROCm Accelerated**: Optimized for AMD GPUs with ROCm support
 - **AI-Powered Analysis**: Uses MONAI's DenseNet121 for medical image classification
-- **hipCIM Integration**: AMD's ROCm port of cuCIM for efficient whole slide image processing
-- **Interactive Web UI**: Modern AMD-branded interface with real-time analysis
-- **SVS File Support**: Processes whole slide image formats (.svs, .ndpi, .scn)
-- **RESTful API**: FastAPI-based web service with comprehensive endpoints
+- **Whole Slide Image Support**: Processes .svs files using cuCIM for efficient WSI handling
+- **ROCm/CUDA Compatible**: Supports both AMD (ROCm) and NVIDIA (CUDA) GPUs
+- **RESTful API**: FastAPI-based web service with interactive documentation
 - **Detailed Results**: Provides probability scores, confidence levels, and analysis metrics
 
 ## 📋 Prerequisites
 
-- **AMD GPU**: ROCm-compatible AMD GPU (MI200/MI300 series recommended)
-- **ROCm 6.0+**: AMD's ROCm platform installed and configured
-- **Python 3.10+**: Modern Python environment
-- **Ubuntu 22.04**: Or compatible Linux distribution
+- Python 3.8+
+- AMD GPU with ROCm support OR NVIDIA GPU with CUDA support
+- Linux environment (tested on Ubuntu)
 
-## 🚀 Quick Start
+## 🚀 Installation Steps
 
-### 1. Install Dependencies
+### 1. System Dependencies
 
+For ROCm (AMD GPUs):
 ```bash
-# Clone the repository
-git clone https://github.com/YazhRajeshAmd/rocm_monai_pathology.git
-cd rocm_monai_pathology
-
-# Install requirements
-pip install -r requirements.txt
-
-# Install hipCIM (AMD's cuCIM port)
-pip install amd-hipcim --extra-index-url=https://pypi.amd.com/simple
+# Install ROCm (if not already installed)
+# Follow official ROCm installation guide for your system
 ```
 
-### 2. Run the Application
+### 2. Python Package Requirements
+
+Install the required Python packages:
 
 ```bash
-# Start the server
-python chatbot_monai_medical.py
+# Core web framework
+pip3 install fastapi uvicorn
 
-# Access the web interface
-# Open http://localhost:8000 in your browser
-```
+# Medical imaging libraries
+pip3 install monai
+pip3 install cucim
 
-## 📚 Detailed Installation
+# Deep learning frameworks
+pip3 install torch torchvision
 
-For comprehensive installation instructions, including system dependencies, ROCm setup, and troubleshooting, see:
+# Scientific computing
+pip3 install numpy
 
-**📖 [INSTALLATION.md](INSTALLATION.md)**
+# For ROCm users, you might need:
+# pip3 install torch torchvision --index-url https://download.pytorch.org/whl/rocm5.4.2
 
-## 📦 Requirements
+# For CUDA users, ensure PyTorch CUDA version matches your system:
 # pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu118
 ```
 
@@ -95,6 +91,38 @@ pathology-chatbot/
 ├── requirements.txt           # Python dependencies
 └── README.md                 # This file
 ```
+
+## Install hipCIM via AMD PyPI
+[Optional step] Follow these if you want to install hipCIM inside a docker
+
+ docker pull rocm/dev-ubuntu-22.04
+ docker run --cap-add=SYS_PTRACE --ipc=host --privileged=true   \
+      --shm-size=128GB --network=host --device=/dev/kfd     \
+      --device=/dev/dri --group-add video -it               \
+      -v $HOME:$HOME  --name ${LOGNAME}_rocm                \
+  rocm/dev-ubuntu-22.04:6.4.1-complete
+Install required system dependencies
+
+ sudo apt update
+ sudo apt install -y lsb-release software-properties-common libopenslide0 python3.10-venv rocjpeg
+ sudo apt install -y rocthrust-dev hipcub hipblas \
+            hipblas-dev hipfft hipsparse \
+            hiprand rocsolver rocrand-dev
+ pip install --upgrade pip
+Create a python virtual environment
+
+ python3 -m venv hipcim_build
+ source hipcim_build/bin/activate
+ 
+     # Install hipCIM
+ pip install amd-hipcim --extra-index-url=https://pypi.amd.com/simple
+Checkout jupyter notebooks
+
+pip install notebook
+git clone --depth 1 git@github.com:ROCm-LS/hipCIM.git hipcim-notebooks \
+   && cd hipcim-notebooks \
+   && git filter-branch --prune-empty --subdirectory-filter notebooks HEAD
+git lfs pull
 
 ## 🔧 Setup
 

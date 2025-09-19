@@ -1,18 +1,22 @@
-# Large pathology slide files
+# Large pathology slide files (over 25MB)
 *.svs
 *.ndpi
 *.scn
 *.vms
 *.vmu
-*.tif
-*.tiff
 data/*.svs
 data/*.ndpi
 data/*.scn
 data/*.vms
 data/*.vmu
+data/large_files/
 static/uploads/*
 !static/uploads/.gitkeep
+
+# Allow small sample files (under 25MB)
+!data/sample_*small*
+!data/*_sample*
+!data/test_*
 
 # Python
 __pycache__/
