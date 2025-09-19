@@ -43,10 +43,34 @@ pip install --upgrade pip
 
 ### 3. Install Base Requirements
 
+Choose the appropriate installation method based on your environment:
+
+#### Option A: Standard Installation
 ```bash
-# Install main requirements
+# Install main requirements (may need dependency resolution)
 pip install -r requirements.txt
 ```
+
+#### Option B: ROCm-Optimized Installation (Recommended for AMD GPUs)
+```bash
+# Install ROCm-specific PyTorch first
+pip install torch torchvision --index-url https://download.pytorch.org/whl/rocm6.0
+
+# Then install other requirements
+pip install fastapi uvicorn[standard] python-multipart
+pip install monai>=1.5.0
+pip install Pillow numpy opencv-python-headless
+pip install scipy scikit-image matplotlib pandas
+pip install pytest jupyter notebook tqdm pydantic
+```
+
+#### Option C: Use ROCm Requirements File
+```bash
+# Use ROCm-specific requirements (if available)
+pip install -r requirements-rocm.txt
+```
+
+**Note**: If you encounter dependency conflicts, try installing PyTorch with ROCm support first, then install other packages.
 
 ### 4. Install hipCIM (ROCm cuCIM Port)
 
@@ -130,6 +154,24 @@ docker run --cap-add=SYS_PTRACE --ipc=host --privileged=true \
 ```
 
 ## Troubleshooting
+
+### Dependency Conflicts
+
+#### PyTorch Version Conflicts
+If you encounter conflicts between PyTorch and MONAI versions:
+
+```bash
+# Solution 1: Install PyTorch for ROCm first
+pip install torch torchvision --index-url https://download.pytorch.org/whl/rocm6.0
+pip install monai>=1.5.0
+
+# Solution 2: Let pip resolve automatically
+pip install monai torch torchvision --index-url https://download.pytorch.org/whl/rocm6.0
+
+# Solution 3: Use specific compatible versions
+pip install torch>=2.4.1,<2.7.0 torchvision>=0.19.0 --index-url https://download.pytorch.org/whl/rocm6.0
+pip install monai==1.5.0
+```
 
 ### hipCIM Issues
 1. **Import Error**: Ensure ROCm is properly installed and `rocm-smi` works

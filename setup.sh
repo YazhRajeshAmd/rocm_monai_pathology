@@ -121,12 +121,27 @@ pip install --upgrade pip
 
 # Install requirements
 print_header "Installing Python packages..."
-if [ -f "requirements.txt" ]; then
-    print_status "Installing from requirements.txt..."
-    pip install -r requirements.txt
+
+# Check for ROCm and install PyTorch accordingly
+if command -v rocm-smi &> /dev/null; then
+    print_status "ROCm detected - installing PyTorch with ROCm support first..."
+    pip install torch torchvision --index-url https://download.pytorch.org/whl/rocm6.0
+    
+    print_status "Installing other requirements..."
+    pip install fastapi uvicorn[standard] python-multipart
+    pip install monai\>=1.5.0
+    pip install Pillow numpy opencv-python-headless
+    pip install scipy scikit-image matplotlib pandas
+    pip install pytest jupyter notebook tqdm pydantic
 else
-    print_error "requirements.txt not found!"
-    exit 1
+    print_warning "ROCm not detected - using standard requirements..."
+    if [ -f "requirements.txt" ]; then
+        print_status "Installing from requirements.txt..."
+        pip install -r requirements.txt
+    else
+        print_error "requirements.txt not found!"
+        exit 1
+    fi
 fi
 
 # Install hipCIM
@@ -175,7 +190,7 @@ print_status "To activate the environment in future sessions:"
 echo "source $VENV_NAME/bin/activate"
 echo ""
 print_status "To run the application:"
-echo "python chatbot_monai_medical.py"
+echo "uvicorn chatbot_monai_medical:app --host 0.0.0.0 --port 8000 --reload"
 echo ""
 print_status "Then open your browser to: http://localhost:8000"
 echo ""
