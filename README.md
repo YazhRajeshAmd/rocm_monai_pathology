@@ -158,6 +158,9 @@ MONAI DenseNet121 model loaded successfully for pathology tumor detection
 - Any other text - General chatbot response
 
 ### Example Usage
+<img width="1383" height="1015" alt="image" src="https://github.com/user-attachments/assets/defd0489-2b1b-406e-af80-37d584698f23" />
+
+
 
 ```bash
 # Analyze pathology slide
