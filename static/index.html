@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMD MONAI Pathology Tumor Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --amd-teal: #00C5CD;
+            --amd-blue: #0070BA;
+            --amd-dark-blue: #003F5C;
+            --amd-light-teal: #4DD0E1;
+            --amd-navy: #1A237E;
+            --gradient-bg: linear-gradient(135deg, var(--amd-blue) 0%, var(--amd-teal) 100%);
+            --card-shadow: 0 8px 32px rgba(0, 112, 186, 0.2);
+            --text-primary: #2C3E50;
+            --text-secondary: #7F8C8D;
+            --success: #27AE60;
+            --warning: #F39C12;
+            --error: #E74C3C;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--gradient-bg);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .amd-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--gradient-bg);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 112, 186, 0.3);
+        }
+
+        .title-section h1 {
+            background: var(--gradient-bg);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(39, 174, 96, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(39, 174, 96, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); }
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            flex: 1;
+        }
+
+        /* Chat Section */
+        .chat-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .chat-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(0, 112, 186, 0.1);
+            background: var(--gradient-bg);
+            color: white;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 1rem 1.25rem;
+            border-radius: 18px;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .message.user .message-bubble {
+            background: var(--gradient-bg);
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message.assistant .message-bubble {
+            background: rgba(0, 112, 186, 0.1);
+            color: var(--text-primary);
+            border-bottom-left-radius: 6px;
+            white-space: pre-line;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .user-avatar {
+            background: var(--amd-teal);
+            color: white;
+        }
+
+        .assistant-avatar {
+            background: var(--amd-blue);
+            color: white;
+        }
+
+        /* Input Section */
+        .chat-input {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(0, 112, 186, 0.1);
+            border-radius: 0 0 20px 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 0.875rem 1.25rem;
+            border: 2px solid rgba(0, 112, 186, 0.2);
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .input-field:focus {
+            border-color: var(--amd-teal);
+            box-shadow: 0 0 0 3px rgba(0, 197, 205, 0.1);
+        }
+
+        .send-button {
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 50%;
+            background: var(--gradient-bg);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 16px rgba(0, 112, 186, 0.3);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .quick-button {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--amd-teal);
+            background: transparent;
+            color: var(--amd-teal);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .quick-button:hover {
+            background: var(--amd-teal);
+            color: white;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .info-card h3 {
+            color: var(--amd-blue);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: var(--success);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--amd-teal);
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .loading-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--amd-teal);
+            border-radius: 50%;
+            animation: loading 1.4s infinite ease-in-out both;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes loading {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .header {
+                text-align: center;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .title-section h1 {
+                font-size: 1.5rem;
+            }
+            
+            .chat-container {
+                height: 500px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(0, 112, 186, 0.1);
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--amd-teal);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-section">
+                <div class="amd-logo">AMD</div>
+                <div class="title-section">
+                    <h1><i class="fas fa-microscope"></i> MONAI Pathology Analysis</h1>
+                    <div class="subtitle">
+                        <i class="fas fa-brain"></i>
+                        AI-Powered Tumor Detection with DenseNet121
+                    </div>
+                </div>
+            </div>
+            <div class="status-indicator">
+                <div class="pulse"></div>
+                System Online
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Chat Section -->
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3><i class="fas fa-comments"></i> Analysis Chat</h3>
+                    <p style="opacity: 0.9; margin-top: 0.5rem;">Interact with the AI pathologist to analyze your slides</p>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant">
+                        <div class="message-avatar assistant-avatar">AI</div>
+                        <div class="message-bubble">
+                            🏥 Welcome to AMD MONAI Pathology Analysis!
+
+I'm ready to analyze your pathology slides for tumor detection using state-of-the-art AI.
+
+Available commands:
+• "analyze slide" - Analyze your pathology slide
+• "tumor detection" - Perform tumor detection analysis  
+• "help" - Get more information
+
+Ready to start? Try analyzing a slide!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input">
+                    <div class="quick-actions">
+                        <button class="quick-button" onclick="sendQuickMessage('analyze slide')">
+                            <i class="fas fa-search"></i> Analyze Slide
+                        </button>
+                        <button class="quick-button" onclick="sendQuickMessage('tumor detection')">
+                            <i class="fas fa-virus"></i> Tumor Detection
+                        </button>
+                        <button class="quick-button" onclick="sendQuickMessage('help')">
+                            <i class="fas fa-question-circle"></i> Help
+                        </button>
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="text" id="messageInput" class="input-field" placeholder="Type your message..." maxlength="500">
+                        <button id="sendButton" class="send-button" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- System Info -->
+                <div class="info-card">
+                    <h3><i class="fas fa-microchip"></i> System Info</h3>
+                    <div class="feature-list">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Model:</span>
+                            <span style="color: var(--amd-teal); font-weight: 500;">DenseNet121</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Framework:</span>
+                            <span style="color: var(--amd-teal); font-weight: 500;">MONAI</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>GPU:</span>
+                            <span style="color: var(--amd-teal); font-weight: 500;" id="gpuStatus">Detecting...</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Status:</span>
+                            <span style="color: var(--success); font-weight: 500;">Ready</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features -->
+                <div class="info-card">
+                    <h3><i class="fas fa-star"></i> Features</h3>
+                    <ul class="feature-list">
+                        <li>AI-powered tumor detection</li>
+                        <li>Whole slide image analysis</li>
+                        <li>Real-time probability scores</li>
+                        <li>AMD ROCm optimized</li>
+                        <li>MONAI medical imaging</li>
+                        <li>Interactive web interface</li>
+                    </ul>
+                </div>
+
+                <!-- Usage Guide -->
+                <div class="info-card">
+                    <h3><i class="fas fa-info-circle"></i> Quick Guide</h3>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                        <p><strong>1.</strong> Place your .svs slide file in the data/ directory</p>
+                        <p><strong>2.</strong> Click "Analyze Slide" or type your command</p>
+                        <p><strong>3.</strong> View detailed analysis results with probability scores</p>
+                        <p><strong>4.</strong> Use quick action buttons for common tasks</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // Auto-scroll to bottom
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Add message to chat
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = `message-avatar ${isUser ? 'user-avatar' : 'assistant-avatar'}`;
+            avatar.textContent = isUser ? 'YOU' : 'AI';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = content;
+            
+            if (isUser) {
+                messageDiv.appendChild(bubble);
+                messageDiv.appendChild(avatar);
+            } else {
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(bubble);
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        // Show loading indicator
+        function showLoading() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message assistant';
+            loadingDiv.id = 'loadingMessage';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar assistant-avatar';
+            avatar.textContent = 'AI';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.innerHTML = '<div class="loading"><i class="fas fa-brain"></i> Analyzing pathology data<div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div></div>';
+            
+            loadingDiv.appendChild(avatar);
+            loadingDiv.appendChild(bubble);
+            chatMessages.appendChild(loadingDiv);
+            scrollToBottom();
+        }
+
+        // Remove loading indicator
+        function removeLoading() {
+            const loadingMessage = document.getElementById('loadingMessage');
+            if (loadingMessage) {
+                loadingMessage.remove();
+            }
+        }
+
+        // Send message to API
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addMessage(message, true);
+            messageInput.value = '';
+            sendButton.disabled = true;
+            showLoading();
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ user: message }),
+                });
+
+                const data = await response.json();
+                removeLoading();
+                addMessage(data.reply, false);
+            } catch (error) {
+                removeLoading();
+                addMessage('❌ Error: Unable to connect to the analysis server. Please check if the server is running.', false);
+            }
+
+            sendButton.disabled = false;
+        }
+
+        // Quick message buttons
+        function sendQuickMessage(message) {
+            messageInput.value = message;
+            sendMessage();
+        }
+
+        // Enter key to send
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Check GPU status on load
+        window.addEventListener('load', function() {
+            fetch('/')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('gpuStatus').textContent = 'AMD ROCm';
+                })
+                .catch(() => {
+                    document.getElementById('gpuStatus').textContent = 'Unknown';
+                });
+        });
+
+        // Initial scroll
+        scrollToBottom();
+    </script>
+</body>
+</html>
