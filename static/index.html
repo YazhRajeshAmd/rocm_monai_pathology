@@ -388,61 +388,7 @@
             }
         }
 
-        /* Image Upload Section */
-        .upload-section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: var(--card-shadow);
-            border: 2px dashed var(--amd-teal);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .upload-section:hover {
-            border-color: var(--amd-blue);
-            background: rgba(0, 197, 205, 0.05);
-        }
-
-        .upload-section.dragover {
-            border-color: var(--amd-blue);
-            background: rgba(0, 197, 205, 0.1);
-            transform: scale(1.02);
-        }
-
-        .upload-content {
-            text-align: center;
-            color: var(--text-secondary);
-        }
-
-        .upload-icon {
-            font-size: 2.5rem;
-            color: var(--amd-teal);
-            margin-bottom: 1rem;
-        }
-
-        .upload-text {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .upload-subtext {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        #fileInput {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-        }
+        /* Custom Scrollbar */
 
         /* Image Preview */
         .image-preview {
@@ -546,41 +492,9 @@
 
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Left Panel - Chat and Upload -->
+            <!-- Left Panel - Chat Only -->
             <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <!-- Image Upload Section -->
-                <div class="upload-section" onclick="document.getElementById('fileInput').click()">
-                    <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)">
-                    <div class="upload-content">
-                        <div class="upload-icon">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                        </div>
-                        <div class="upload-text">
-                            Click or drag & drop to upload pathology image
-                        </div>
-                        <div class="upload-subtext">
-                            Supports: JPG, PNG, TIFF, SVS • Max size: 50MB
-                        </div>
-                    </div>
-                    
-                    <!-- Image Preview -->
-                    <div class="image-preview" id="imagePreview">
-                        <img id="previewImage" class="preview-image" src="" alt="Preview">
-                        <div class="image-info" id="imageInfo"></div>
-                    </div>
-                </div>
-
-                <!-- Analysis Results -->
-                <div class="analysis-results" id="analysisResults">
-                    <div class="result-header">
-                        <i class="fas fa-chart-bar"></i>
-                        Analysis Results
-                    </div>
-                    <div class="result-grid" id="resultGrid">
-                        <!-- Results will be populated here -->
-                    </div>
-                </div>
-                
+                <!-- Chat Interface -->
                 <!-- Chat Section -->
             <div class="chat-container">
                 <div class="chat-header">
@@ -597,22 +511,19 @@
 I'm ready to analyze your pathology slides for tumor detection using state-of-the-art AI.
 
 Available commands:
-• "analyze slide" - Analyze your pathology slide
+• "analyze sample" - Analyze the sample pathology slide
 • "tumor detection" - Perform tumor detection analysis  
 • "help" - Get more information
 
-Ready to start? Try analyzing a slide!
+Ready to start? Try analyzing the sample slide!
                         </div>
                     </div>
                 </div>
 
                 <div class="chat-input">
                     <div class="quick-actions">
-                        <button class="quick-button" onclick="document.getElementById('fileInput').click()">
-                            <i class="fas fa-upload"></i> Upload Image
-                        </button>
                         <button class="quick-button" onclick="sendQuickMessage('analyze slide')">
-                            <i class="fas fa-search"></i> Analyze Slide
+                            <i class="fas fa-microscope"></i> Analyze Sample
                         </button>
                         <button class="quick-button" onclick="sendQuickMessage('tumor detection')">
                             <i class="fas fa-virus"></i> Tumor Detection
@@ -662,31 +573,34 @@ Ready to start? Try analyzing a slide!
                     <h3><i class="fas fa-star"></i> Features</h3>
                     <ul class="feature-list">
                         <li>AI-powered tumor detection</li>
-                        <li>Drag & drop image upload</li>
-                        <li>Real-time image preview</li>
-                        <li>Whole slide image analysis</li>
+                        <li><strong>SVS whole slide image support</strong></li>
+                        <li>Sample pathology slide analysis</li>
+                        <li>Real-time AI chat interface</li>
+                        <li>cuCIM high-performance processing</li>
+                        <li>MONAI medical imaging framework</li>
                         <li>Real-time probability scores</li>
                         <li>AMD ROCm optimized</li>
-                        <li>MONAI medical imaging</li>
                         <li>Interactive web interface</li>
+                        <li>DenseNet121 tumor classification</li>
                     </ul>
                 </div>
 
                 <!-- Usage Guide -->
-                <div class="info-card">
+                                <div class="sidebar-card">
                     <h3><i class="fas fa-info-circle"></i> Quick Guide</h3>
                     <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
-                        <p><strong>📤 Upload Method:</strong></p>
-                        <p>• Drag & drop image files into upload area</p>
-                        <p>• Click upload area to browse files</p>
-                        <p>• Use "Upload Image" quick button</p>
+                        <p><strong>� File-Based Analysis:</strong></p>
+                        <p>• Uses sample_wsi.svs in data/ directory</p>
+                        <p>• Click "Analyze Sample" to get started</p>
                         <br>
-                        <p><strong>💬 Chat Method:</strong></p>
-                        <p>• Place .svs files in data/ directory</p>
-                        <p>• Click "Analyze Slide" or type commands</p>
+                        <p><strong>💬 Chat Commands:</strong></p>
+                        <p>• "analyze sample" - Analyze pathology slide</p>
+                        <p>• "tumor detection" - Perform detection</p>
+                        <p>• "help" - Get assistance</p>
                         <br>
-                        <p><strong>🔬 Supported Formats:</strong></p>
-                        <p>JPG, PNG, TIFF, SVS • Max 50MB</p>
+                        <p><strong>🔬 Technology:</strong></p>
+                        <p>MONAI DenseNet121 for pathology analysis</p>
+                        <p>cuCIM for whole slide image processing</p>
                     </div>
                 </div>
             </div>
@@ -793,128 +707,19 @@ Ready to start? Try analyzing a slide!
             sendMessage();
         }
 
-        // File upload handling
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        // Remove any upload-related functions - using file-based approach
 
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                alert('Please select an image file (JPG, PNG, TIFF, etc.)');
-                return;
-            }
-
-            // Validate file size (50MB limit)
-            if (file.size > 50 * 1024 * 1024) {
-                alert('File size must be less than 50MB');
-                return;
-            }
-
-            // Show preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                showImagePreview(e.target.result, file);
-            };
-            reader.readAsDataURL(file);
-
-            // Upload and analyze
-            uploadAndAnalyze(file);
-        }
-
-        // Show image preview
-        function showImagePreview(imageSrc, file) {
-            const preview = document.getElementById('imagePreview');
-            const previewImage = document.getElementById('previewImage');
-            const imageInfo = document.getElementById('imageInfo');
-
-            previewImage.src = imageSrc;
-            imageInfo.textContent = `${file.name} • ${(file.size / 1024 / 1024).toFixed(2)} MB`;
-            preview.style.display = 'block';
-        }
-
-        // Upload and analyze image
-        async function uploadAndAnalyze(file) {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            // Add user message for upload
-            addMessage(`📤 Uploading and analyzing: ${file.name}`, true);
-            showLoading();
-
-            try {
-                const response = await fetch('/upload-image', {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                const data = await response.json();
-                removeLoading();
-
-                if (data.success) {
-                    // Show analysis results
-                    showAnalysisResults(data.analysis_data);
-                    addMessage(data.message, false);
-                } else {
-                    addMessage(`❌ Upload failed: ${data.detail || 'Unknown error'}`, false);
-                }
-            } catch (error) {
-                removeLoading();
-                addMessage('❌ Error uploading image. Please check if the server is running.', false);
-            }
-        }
-
-        // Show analysis results in the dedicated section
-        function showAnalysisResults(data) {
-            const resultsSection = document.getElementById('analysisResults');
-            const resultGrid = document.getElementById('resultGrid');
-            
-            resultGrid.innerHTML = `
-                <div class="result-item">
-                    <div class="result-value">${data.prediction}</div>
-                    <div class="result-label">Prediction</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-value">${(data.tumor_probability * 100).toFixed(1)}%</div>
-                    <div class="result-label">Tumor Probability</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-value">${(data.normal_probability * 100).toFixed(1)}%</div>
-                    <div class="result-label">Normal Probability</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-value">${data.confidence_level}</div>
-                    <div class="result-label">Confidence Level</div>
-                </div>
-            `;
-            
-            resultsSection.style.display = 'block';
-        }
-
-        // Drag and drop functionality
-        const uploadSection = document.querySelector('.upload-section');
-        
-        uploadSection.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            uploadSection.classList.add('dragover');
-        });
-        
-        uploadSection.addEventListener('dragleave', function(e) {
-            e.preventDefault();
-            uploadSection.classList.remove('dragover');
-        });
-        
-        uploadSection.addEventListener('drop', function(e) {
-            e.preventDefault();
-            uploadSection.classList.remove('dragover');
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                document.getElementById('fileInput').files = files;
-                handleFileUpload({ target: { files: files } });
+        // Event listeners
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
             }
         });
 
-        // Enter key to send
+        sendButton.addEventListener('click', sendMessage);
+    </script>
+</body>
+</html>        // Enter key to send
         messageInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 sendMessage();

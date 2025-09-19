@@ -1,6 +1,6 @@
 # chatbot_monai_pathology_tumor_detection.py
 
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -11,10 +11,6 @@ import torch.nn as nn
 import torchvision.models as models
 import torchvision.transforms as transforms
 import os
-import shutil
-from PIL import Image
-import io
-import base64
 from monai.transforms import (
     Compose, LoadImage, ScaleIntensity, Resize, ToTensor, EnsureChannelFirst, Lambda,
     RandFlip, RandRotate, NormalizeIntensity
@@ -36,14 +32,7 @@ chat_history = []
 class ChatRequest(BaseModel):
     user: str
 
-class AnalysisResult(BaseModel):
-    reply: str
-    history: list
-    image_path: str = None
-    analysis_data: dict = None
-
 # Create directories if they don't exist
-os.makedirs("static/uploads", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
 # -------------------------
@@ -69,96 +58,10 @@ async def api_info():
         "endpoints": {
             "/": "GET - Main UI Interface",
             "/chat": "POST - Chat with AI pathologist",
-            "/upload-image": "POST - Upload and analyze image",
             "/api": "GET - API information",
             "/docs": "GET - API documentation"
         }
     }
-
-# -------------------------
-# Image Upload and Analysis Endpoint
-# -------------------------
-@app.post("/upload-image")
-async def upload_and_analyze_image(file: UploadFile = File(...)):
-    """Upload and analyze pathology image"""
-    try:
-        # Validate file type
-        if not file.content_type.startswith("image/"):
-            raise HTTPException(status_code=400, detail="File must be an image")
-        
-        # Read and validate image
-        contents = await file.read()
-        image = Image.open(io.BytesIO(contents))
-        
-        # Convert to RGB if needed
-        if image.mode != 'RGB':
-            image = image.convert('RGB')
-        
-        # Save uploaded image
-        filename = f"uploaded_{file.filename}"
-        upload_path = f"static/uploads/{filename}"
-        image.save(upload_path)
-        
-        # Convert PIL image to numpy for analysis
-        image_array = np.array(image)
-        print(f"Uploaded image shape: {image_array.shape}")
-        
-        # Preprocess using pathology-optimized pipeline
-        patch = preprocess(image_array)
-        print(f"Patch shape after preprocessing: {patch.shape}")
-        patch = patch.unsqueeze(0).to(device)
-        
-        # Inference with MONAI DenseNet121
-        with torch.no_grad():
-            logits = model(patch)
-            probabilities = torch.softmax(logits, dim=1).cpu().numpy()
-            confidence = torch.max(torch.softmax(logits, dim=1)).item()
-        
-        normal_prob = float(probabilities[0][0])
-        tumor_prob = float(probabilities[0][1])
-        
-        # Determine prediction
-        prediction = "Tumor Detected" if tumor_prob > normal_prob else "Normal Tissue"
-        confidence_level = "High" if confidence > 0.8 else "Medium" if confidence > 0.6 else "Low"
-        
-        analysis_data = {
-            "prediction": prediction,
-            "tumor_probability": tumor_prob,
-            "normal_probability": normal_prob,
-            "confidence": confidence,
-            "confidence_level": confidence_level,
-            "image_dimensions": image_array.shape,
-            "filename": filename
-        }
-        
-        # Generate response message
-        analysis_message = (
-            f"🔬 **Image Analysis Complete!**\n\n"
-            f"📊 **Prediction:** {prediction}\n"
-            f"📈 **Tumor Probability:** {tumor_prob:.3f}\n"
-            f"📉 **Normal Probability:** {normal_prob:.3f}\n"
-            f"🎯 **Confidence Level:** {confidence_level} ({confidence:.3f})\n"
-            f"📏 **Image Size:** {image_array.shape[1]}×{image_array.shape[0]} pixels\n"
-            f"⚙️ **Model:** MONAI DenseNet121 for Pathology\n\n"
-            f"✅ **Image successfully uploaded and analyzed!**"
-        )
-        
-        # Add to chat history
-        chat_history.append({"role": "user", "content": f"Uploaded image: {filename}"})
-        chat_history.append({"role": "assistant", "content": analysis_message})
-        
-        return {
-            "success": True,
-            "message": analysis_message,
-            "image_path": f"/static/uploads/{filename}",
-            "analysis_data": analysis_data,
-            "history": chat_history
-        }
-        
-    except Exception as e:
-        error_msg = f"Error analyzing uploaded image: {str(e)}"
-        chat_history.append({"role": "assistant", "content": error_msg})
-        raise HTTPException(status_code=500, detail=error_msg)
 
 # -------------------------
 # Load pretrained model for Pathology Tumor Detection
