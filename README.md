@@ -29,17 +29,13 @@ git clone https://github.com/YazhRajeshAmd/rocm_monai_pathology.git
 cd rocm_monai_pathology
 
 # Install requirements
-pip install -r requirements.txt
-
-# Install hipCIM (AMD's cuCIM port)
-pip install amd-hipcim --extra-index-url=https://pypi.amd.com/simple
-```
+./setup.sh
 
 ### 2. Run the Application
 
 ```bash
 # Start the server
-python chatbot_monai_medical.py
+uvicorn chatbot_monai_medical:app --host 0.0.0.0 --port 8000 --reload
 
 # Access the web interface
 # Open http://localhost:8000 in your browser
@@ -109,7 +105,7 @@ pathology-chatbot/
 
 ```bash
 # Navigate to project directory
-cd /path/to/your/project
+cd /rocm_monai_pathology
 
 # Start the FastAPI server
 uvicorn chatbot_monai_medical:app --host 0.0.0.0 --port 8000 --reload
@@ -196,7 +192,6 @@ curl http://localhost:8000/
 
 ### GPU Support
 - **ROCm (AMD)**: Automatic detection and usage
-- **CUDA (NVIDIA)**: Automatic detection and usage  
 - **CPU Fallback**: If no GPU available
 
 ## 🛠️ Troubleshooting
@@ -212,7 +207,6 @@ curl http://localhost:8000/
 2. **CUDA/ROCm not detected**:
    ```bash
    # Verify GPU drivers and runtime
-   nvidia-smi  # For NVIDIA
    rocm-smi    # For AMD
    ```
 
