@@ -1,0 +1,45 @@
+# Whitelist-only egress: DNS, OTLP :4317, and HTTPS :443 for the one-time
+# DenseNet121 pretrained-weight download on first start (torch hub / MONAI
+# model source). No other outbound calls at runtime.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: demomonai-net
+  namespace: slai-app-prod
+  labels:
+    app.kubernetes.io/name: demomonai
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: demomonai
+      app.kubernetes.io/instance: demomonai
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - ports:
+        - protocol: TCP
+          port: 4317
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443

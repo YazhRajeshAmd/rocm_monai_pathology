@@ -1,0 +1,79 @@
+# Image is stamped automatically by .github/workflows/deploy-prod.yml after
+# Harbor publish + authorization — no manual edit needed for a normal run.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demomonai
+  namespace: slai-app-prod
+  labels:
+    app.kubernetes.io/name: demomonai
+    app.kubernetes.io/instance: demomonai
+    app.kubernetes.io/managed-by: slai-app-platform
+    hosted-by: slai-app-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: demomonai
+      app.kubernetes.io/instance: demomonai
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: demomonai
+        app.kubernetes.io/instance: demomonai
+        hosted-by: slai-app-platform
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          image: mkmhub.amd.com/hw-slaiapp-dev/demomonai:29ba6e7eba594c12ce2f7e40e569ca8100cfc6f0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://atlvslaiapp03:4317"
+            - name: OTEL_SERVICE_NAME
+              value: demomonai
+            - name: TORCH_HOME
+              value: "/tmp/torch-cache"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 512Mi

@@ -1,0 +1,9 @@
+.git
+.github
+*.md
+deploy
+__pycache__
+monai_pathology_env/
+data/*.svs
+data/*.ndpi
+data/*.scn

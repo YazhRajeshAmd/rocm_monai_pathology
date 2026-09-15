@@ -1,0 +1,28 @@
+# Public URL: https://demomonai.slai-app.amd.com/
+# Uses the platform-owned wildcard TLS Secret — no per-app TLS ciphertext.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demomonai
+  namespace: slai-app-prod
+  labels:
+    app.kubernetes.io/name: demomonai
+    app.kubernetes.io/instance: demomonai
+    app.kubernetes.io/managed-by: slai-app-platform
+    hosted-by: slai-app-platform
+spec:
+  rules:
+    - host: demomonai.slai-app.amd.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: demomonai
+                port:
+                  name: http
+  tls:
+    - hosts:
+        - demomonai.slai-app.amd.com
+      secretName: slai-app-wildcard-tls

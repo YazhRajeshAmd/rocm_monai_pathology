@@ -4,7 +4,17 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
-from cucim import CuImage
+# hipCIM (AMD's ROCm port of cuCIM) is only installable/importable on a
+# ROCm-enabled host with the `amd-hipcim` package from pypi.amd.com — it is
+# NOT in requirements.txt and will not be present on CPU-only hosting. Make
+# it optional so the rest of the app (UI, /api, /chat help) still starts;
+# whole-slide-image endpoints report unavailable instead of crash-looping.
+try:
+    from cucim import CuImage
+    CUCIM_AVAILABLE = True
+except ImportError:
+    CuImage = None
+    CUCIM_AVAILABLE = False
 import numpy as np
 import torch
 import torch.nn as nn
@@ -123,6 +133,11 @@ augment_preprocess = Compose([
 @app.get("/preview-svs")
 async def preview_svs():
     """Generate a preview of the SVS slide for display in the UI"""
+    if not CUCIM_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Whole-slide image preview requires hipCIM on a ROCm-enabled Instinct GPU host — unavailable in this environment.",
+        )
     try:
         svs_path = "data/sample_wsi.svs"
         if not os.path.exists(svs_path):
@@ -193,6 +208,11 @@ async def preview_svs():
 @app.get("/svs-info")
 async def svs_info():
     """Get information about the SVS slide"""
+    if not CUCIM_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Whole-slide image info requires hipCIM on a ROCm-enabled Instinct GPU host — unavailable in this environment.",
+        )
     try:
         svs_path = "data/sample_wsi.svs"
         if not os.path.exists(svs_path):
@@ -225,6 +245,15 @@ async def chat(req: ChatRequest):
     chat_history.append({"role": "user", "content": user_msg})
 
     if "analyze slide" in user_msg.lower() or "tumor detection" in user_msg.lower():
+        if not CUCIM_AVAILABLE:
+            bot_msg = (
+                "⚠️ Whole-slide image analysis requires hipCIM on a "
+                "ROCm-enabled Instinct GPU host, which isn't available in "
+                "this environment. The rest of this demo (chat, UI) still "
+                "works — this feature needs a GPU-backed deployment."
+            )
+            chat_history.append({"role": "assistant", "content": bot_msg})
+            return {"reply": bot_msg, "history": chat_history}
         try:
             # Load slide with cuCIM for efficient whole slide image processing
             img = CuImage("data/sample_wsi.svs")

@@ -1,3 +1,34 @@
+## SLAI app platform onboarding (demomonai)
+
+This repo is wired for `slai-app-platform` (new `Dockerfile`,
+`.github/workflows/deploy-prod.yml`, `deploy/slai-app-prod/demomonai/`).
+**Important limitation, by design:** `hipCIM` (AMD's ROCm port of cuCIM) is
+ROCm-only and isn't in `requirements.txt` — it's installed separately per
+`INSTALLATION.md` on a real Instinct GPU host. `slai-app-prod` is CPU-only
+hosting, so it's not installed in the container image at all.
+
+`chatbot_monai_medical.py` was patched so this is a soft limitation, not a
+hard crash: the `from cucim import CuImage` import is now wrapped in a
+try/except (`CUCIM_AVAILABLE` flag). On this CPU deployment, the app starts
+normally and serves the UI, `/api`, and the chatbot's help/greeting replies —
+but `/preview-svs`, `/svs-info`, and the "analyze slide" chat command return
+a clear 503 / explanatory message instead of the real whole-slide-image
+tumor-detection result, since that genuinely requires a ROCm Instinct GPU.
+Nothing about this fix changes behavior when hipCIM *is* installed (e.g. a
+real GPU deployment elsewhere) — the try/except only affects the case where
+it's missing.
+
+Other fixes: `DenseNet121(pretrained=True)`'s weight cache now points at
+`$TORCH_HOME=/tmp/torch-cache` (root filesystem is read-only at runtime).
+
+To onboard: set up GitHub Actions secrets/variables on this repo per
+`skills/slai-app-creator/SKILL.md` §1c (`SLAI_APP_DEV_PR_TOKEN`,
+`HARBOR_USERNAME`, `HARBOR_PASSWORD`; variables `APP_ID=demomonai`,
+`IMAGE_NAME=demomonai`, `BUILD_CONTEXT=.`), then Actions → Deploy prod → Run
+workflow.
+
+---
+
 # 🔬 AMD MONAI Pathology Analysis
 
 A FastAPI-based web application for automated pathology tumor detection using MONAI's DenseNet121 architecture. This AMD ROCm-accelerated application analyzes whole slide images (WSI) to detect tumor regions in pathological samples.

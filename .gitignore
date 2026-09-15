@@ -200,3 +200,10 @@ data/large_files/
 data/datasets/
 models/
 checkpoints/
+
+# slai-app-platform onboarding (skills/slai-app-creator §0d)
+*.raw.yaml
+.oci-build/
+.cache/
+*.enc.yaml
+!deploy/slai-app-prod/**/secrets.enc.yaml
